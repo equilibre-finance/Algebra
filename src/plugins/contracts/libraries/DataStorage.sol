@@ -207,6 +207,36 @@ library DataStorage {
     }
   }
 
+  /// TODO
+  function getAverageVolatilityAtTimepoint(Timepoint[UINT16_MODULO] storage self, uint16 index) internal view returns (uint88 volatilityAverage) {
+    uint32 time = self[index].blockTimestamp;
+    uint88 lastVolatilityCumulative = self[index].volatilityCumulative;
+    uint16 windowStartIndex = self[index].windowStartIndex;
+
+    unchecked {
+      uint32 oldestTimestamp = self[windowStartIndex].blockTimestamp;
+      uint88 cumulativeVolatilityAtStart = self[windowStartIndex].volatilityCumulative;
+      uint32 target = time - WINDOW;
+
+      if (_lteConsideringOverflow(oldestTimestamp, target, time)) {
+        if (oldestTimestamp != target) {
+          uint32 nextTimestamp = self[windowStartIndex + 1].blockTimestamp;
+          uint88 nextVolatilityCumulative = self[windowStartIndex + 1].volatilityCumulative;
+
+          (uint32 timepointTimeDelta, uint32 targetDelta) = (nextTimestamp - oldestTimestamp, target - oldestTimestamp);
+          cumulativeVolatilityAtStart += ((nextVolatilityCumulative - cumulativeVolatilityAtStart) / timepointTimeDelta) * targetDelta;
+        }
+
+        return ((lastVolatilityCumulative - cumulativeVolatilityAtStart) / WINDOW); // sample is big enough to ignore bias of variance
+      } else if (time != oldestTimestamp) {
+        // recorded timepoints are not enough, so we will extrapolate
+        uint32 unbiasedDenominator = time - oldestTimestamp;
+        if (unbiasedDenominator > 1) unbiasedDenominator--; // Bessel's correction for "small" sample
+        return ((lastVolatilityCumulative - cumulativeVolatilityAtStart) / unbiasedDenominator);
+      }
+    }
+  }
+
   // ##### further functions are private to the library, but some are made internal for fuzzy testing #####
 
   /// @notice Transforms a previous timepoint into a new timepoint, given the passage of time and the current tick and liquidity values

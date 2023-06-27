@@ -133,19 +133,12 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     }
   }
 
-  function _getFeeAtLastTimepoint(uint16 lastTimepointIndex, uint16 oldestTimepointIndex, int24 currentTick) internal view returns (uint16 fee) {
+  function _getFeeAtLastTimepoint(uint16 lastTimepointIndex) internal view returns (uint16 fee) {
     AlgebraFeeConfiguration memory _feeConfig = feeConfig;
     if (_feeConfig.alpha1 | _feeConfig.alpha2 == 0) {
       return _feeConfig.baseFee;
     } else {
-      uint88 lastVolatilityCumulative = timepoints[lastTimepointIndex].volatilityCumulative;
-      uint88 volatilityAverage = timepoints.getAverageVolatility(
-        _blockTimestamp(),
-        currentTick,
-        lastTimepointIndex,
-        oldestTimepointIndex,
-        lastVolatilityCumulative
-      );
+      uint88 volatilityAverage = timepoints.getAverageVolatilityAtTimepoint(lastTimepointIndex);
       return AdaptiveFee.getFee(volatilityAverage, _feeConfig);
     }
   }
@@ -230,9 +223,9 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     if (_lastTimepointTimestamp == _blockTimestamp()) return;
 
     (int24 tick, uint16 fee, ) = _getPoolState();
-    (bool updated, uint16 newLastIndex, uint16 oldestIndex) = _writeTimepoint(_blockTimestamp(), tick, _lastIndex);
+    (bool updated, uint16 newLastIndex, ) = _writeTimepoint(_blockTimestamp(), tick, _lastIndex);
     if (updated) {
-      uint16 newFee = _getFeeAtLastTimepoint(newLastIndex, oldestIndex, tick);
+      uint16 newFee = _getFeeAtLastTimepoint(newLastIndex);
 
       if (newFee != fee) {
         IAlgebraPool(pool).setFee(newFee);
