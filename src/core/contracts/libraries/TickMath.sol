@@ -77,16 +77,10 @@ library TickMath {
     unchecked {
       // second inequality must be >= because the price can never reach the price at the max tick
       if (price < MIN_SQRT_RATIO || price >= MAX_SQRT_RATIO) revert IAlgebraPoolErrors.priceOutOfRange();
-      uint256 ratio = uint256(price) << 32;
 
-      uint256 r = ratio;
+      uint256 r = uint256(price) >> 32; // MIN_SQRT_RATIO has 33 as msb, so we can reduce the scope of the search
       uint256 msb;
 
-      assembly {
-        let f := shl(7, gt(r, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))
-        msb := or(msb, f)
-        r := shr(f, r)
-      }
       assembly {
         let f := shl(6, gt(r, 0xFFFFFFFFFFFFFFFF))
         msb := or(msb, f)
@@ -122,10 +116,10 @@ library TickMath {
         msb := or(msb, f)
       }
 
-      if (msb >= 128) r = ratio >> (msb - 127);
-      else r = ratio << (127 - msb);
+      if (msb >= 64) r = (uint256(price) << 32) >> (msb - 63);
+      else r = uint256(price) << (95 - msb);
 
-      int256 log_2 = (int256(msb) - 128) << 64;
+      int256 log_2 = (int256(msb) - 64) << 64;
 
       assembly {
         r := shr(127, mul(r, r))
