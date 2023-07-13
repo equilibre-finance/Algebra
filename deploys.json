@@ -1,1 +1,10 @@
-{}
+{
+    "2221": {
+        "poolDeployer": "0xCbA0E551E95e483dE4Ebab849410B7004e711E70",
+        "factory": "0x9B464724775aBC685d44F79427a57eB1bCF0a912"
+    },
+    "31337": {
+        "poolDeployer": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+        "factory": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
+    }
+}

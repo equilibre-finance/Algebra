@@ -62,11 +62,42 @@ export default {
       chainId: 137,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
       gasPrice: 50_000_000_000
-    }
+    },
+    kavaMainnet: {
+      url: "https://evm.kava.io",
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    kavaTestnet: {
+      url: "https://evm.testnet.kava.io",
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+
   },
   etherscan: {
-    // Your API key for Etherscan
-    // Obtain one at https://etherscan.io/
-    apiKey: `${POLYGONSCAN_API_KEY}`,
-  },
+    apiKey: {
+      // npx hardhat verify --list-networks
+      kavaTestnet: 'x',
+      kavaMainnet: 'x',
+      polygon: `${POLYGONSCAN_API_KEY}`,
+      polygonMumbai: `${POLYGONSCAN_API_KEY}`,
+    },
+    customChains: [
+      {
+        network: "kavaMainnet",
+        chainId: 2222,
+        urls: {
+          apiURL: "https://explorer.kava.io/api",
+          browserURL: "https://explorer.kava.io"
+        }
+      },
+      {
+        network: "kavaTestnet",
+        chainId: 2221,
+        urls: {
+          apiURL: "https://explorer.testnet.kava.io/api",
+          browserURL: "https://explorer.testnet.kava.io"
+        }
+      }
+    ]
+  }
 }
